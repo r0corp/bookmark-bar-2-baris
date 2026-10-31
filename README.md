@@ -53,6 +53,15 @@ Titik **hijau** = perangkat menjawab, **merah** = mati atau tidak menjawab.
 - Izin: `bookmarks`, `storage`, `favicon`, `alarms` (jadwal cek status tiap menit).
 - Bar dibuat di shadow DOM tertutup: situs yang dibuka tidak bisa membaca bookmark Anda, dan
   ekstensi tidak membaca isi halaman (hanya judul + alamat saat Anda memilih "Tambahkan halaman ini").
+- Kotak cari dan dialog edit berjalan di jendela milik ekstensi (iframe dengan alamat acak per sesi
+  dan token sekali pakai): ketikan Anda di sana tidak bisa dibaca situs yang sedang dibuka, dan situs
+  tidak bisa memunculkan jendela itu sendiri.
+- Alamat `javascript:`, `data:` dan sejenisnya ditolak, baik saat diseret dari halaman maupun saat edit,
+  jadi link jahat tidak bisa menjadi bookmark yang menjalankan kode.
+
+## Lisensi
+
+[MIT](LICENSE) – bebas dipakai, diubah, dan dibagikan, dengan mencantumkan hak cipta.
 
 ## Pasang
 

@@ -48,29 +48,72 @@ async function tree() {
   };
 }
 
+// Alamat yang boleh disimpan / dibuka. javascript:, data:, blob: dll. ditolak supaya link jahat
+// yang diseret dari halaman tidak bisa menjadi bookmark yang menjalankan kode.
+const SAFE_PROTOCOLS = new Set(["http:", "https:", "file:", "ftp:", "chrome:", "chrome-extension:", "edge:", "about:"]);
+function safeUrl(url) {
+  try { return SAFE_PROTOCOLS.has(new URL(url).protocol); } catch { return false; }
+}
+const unsafe = () => Promise.reject(new Error("Alamat ditolak: hanya http, https, file, dan halaman Chrome."));
+
+// --- jendela aman (pencarian + dialog) -----------------------------------------------------
+// Kotak cari dan dialog edit dibuka di iframe milik ekstensi, jadi ketikan tidak bisa dibaca
+// halaman. Iframe hanya mau tampil dengan token sekali pakai yang dibuat di sini untuk tab itu.
+const uiTokens = new Map();
+function uiOpen(tabId, mode, args) {
+  const token = crypto.randomUUID();
+  uiTokens.set(token, { tabId, mode, args, exp: Date.now() + 15000 });
+  return token;
+}
+function uiClaim(tabId, token) {
+  const t = uiTokens.get(token);
+  uiTokens.delete(token);
+  if (!t || t.tabId !== tabId || t.exp < Date.now()) return null;
+  return { mode: t.mode, args: t.args };
+}
+
 // --- pesan dari bar --------------------------------------------------------------------------
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+  if (sender.id !== chrome.runtime.id) return false;
   const tabId = sender.tab && sender.tab.id;
   const done = (p) => { Promise.resolve(p).then(() => reply(true), (e) => reply({ error: String(e.message || e) })); return true; };
   switch (msg.type) {
     case "tree":
       tree().then(reply);
       return true;
+    case "ui-open":
+      reply(tabId != null ? uiOpen(tabId, msg.mode, msg.args || {}) : null);
+      return false;
+    case "ui-claim":
+      reply(tabId != null ? uiClaim(tabId, msg.token) : null);
+      return false;
+    case "ui-close":
+      if (tabId != null) chrome.tabs.sendMessage(tabId, { type: "ui-close", toast: msg.toast }, { frameId: 0 }).catch(() => {});
+      return false;
+    case "get":
+      chrome.bookmarks.get(msg.id).then(([n]) => reply(n || null), () => reply(null));
+      return true;
     case "open":
+      if (!safeUrl(msg.url)) return false;
       if (msg.where === "window") chrome.windows.create({ url: msg.url });
       else if (msg.where === "incognito") chrome.windows.create({ url: msg.url, incognito: true });
       else if (msg.where === "tab") chrome.tabs.create({ url: msg.url, active: false, openerTabId: tabId });
       else if (tabId != null) chrome.tabs.update(tabId, { url: msg.url });
       return false;
-    case "openAll":
-      if (msg.where === "window") chrome.windows.create({ url: msg.urls });
-      else msg.urls.forEach((url) => chrome.tabs.create({ url, active: false, openerTabId: tabId }));
+    case "openAll": {
+      const urls = (msg.urls || []).filter(safeUrl);
+      if (!urls.length) return false;
+      if (msg.where === "window") chrome.windows.create({ url: urls });
+      else urls.forEach((url) => chrome.tabs.create({ url, active: false, openerTabId: tabId }));
       return false;
+    }
     case "update":
+      if (msg.url != null && !safeUrl(msg.url)) return done(unsafe());
       return done(chrome.bookmarks.update(msg.id, msg.url != null ? { title: msg.title, url: msg.url } : { title: msg.title }));
     case "remove":
       return done(msg.folder ? chrome.bookmarks.removeTree(msg.id) : chrome.bookmarks.remove(msg.id));
     case "create":
+      if (msg.url != null && !safeUrl(msg.url)) return done(unsafe());
       return done(chrome.bookmarks.create({ parentId: msg.parentId, index: msg.index, title: msg.title, url: msg.url }));
     case "move":
       return done(chrome.bookmarks.move(msg.id, { parentId: msg.parentId, index: msg.index }));

@@ -18,8 +18,7 @@
   let savedMargin = null;
   let revealed = false;
   let hideTimer;
-  let search = null;
-  let dialog = null;
+  let ui = null;
   let drag = null;
 
   const CSS = `
@@ -75,31 +74,8 @@
     .hot { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 2147483645; }
     .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); padding: 8px 14px;
       background: #323232; color: #fff; border-radius: 6px; font-size: 12px; z-index: 2147483647; }
-    .backdrop { position: fixed; inset: 0; z-index: 2147483647; background: rgba(0,0,0,.25); display: flex;
-      align-items: flex-start; justify-content: center; padding-top: 12vh; }
-    .box { width: min(560px, calc(100vw - 32px)); background: var(--menu); color: var(--fg); border-radius: 12px;
-      box-shadow: var(--shadow); border: 1px solid var(--line); overflow: hidden; }
-    .dialog { padding: 18px 20px; }
-    .dialog h2 { margin: 0 0 12px; font-size: 16px; font-weight: 600; }
-    .dialog .msg { margin-bottom: 12px; font-size: 13px; color: var(--muted); }
-    .dialog label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
-    .dialog input, .search input { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
-      background: transparent; color: var(--fg); font-size: 13px; outline: none; }
-    .dialog input:focus { border-color: var(--accent); }
-    .buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-    .btn { padding: 7px 16px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--fg);
-      font-size: 13px; cursor: pointer; }
-    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .btn.danger { background: var(--off); border-color: var(--off); color: #fff; }
-    .search input { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 14px 16px; font-size: 15px; }
-    .results { max-height: 50vh; overflow-y: auto; padding: 6px 0; }
-    .result { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; }
-    .result.sel { background: var(--hover); }
-    .result .txt { min-width: 0; flex: 1; }
-    .result b { display: block; font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .result small { display: block; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .result mark { background: none; color: var(--accent); font-weight: 700; }
-    .hint { padding: 8px 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+    .ui { position: fixed; inset: 0; width: 100vw; height: 100vh; border: 0; z-index: 2147483647;
+      background: transparent; color-scheme: normal; }
   `;
 
   const FOLDER_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-8l-2-2z"/></svg>';
@@ -297,7 +273,7 @@
 
   function closeAll() {
     closeMenus();
-    closeSearch();
+    closeUI();
   }
 
   function contextMenu(e, ...children) {
@@ -344,7 +320,7 @@
       menuItem("Ganti nama…", () => { closeMenus(); renameFolder(node); }),
       el("div", { class: "label" }, "Warna folder"), sw,
       el("hr"),
-      menuItem("Hapus folder…", () => { closeMenus(); deleteFolder(node, links); }));
+      menuItem("Hapus folder…", () => { closeMenus(); deleteFolder(node); }));
   }
 
   function barMenu(e, parentId) {
@@ -365,159 +341,31 @@
       .then((r) => toast(r && r.error ? r.error : "Halaman ditambahkan"));
   }
 
-  // --- dialog ------------------------------------------------------------------------------
-  function openDialog({ title, message, fields = [], ok = "Simpan", danger = false, onOk }) {
-    closeDialog();
-    const box = el("div", { class: "box dialog" }, el("h2", {}, title), message ? el("div", { class: "msg" }, message) : null);
-    const inputs = {};
-    for (const f of fields) {
-      const input = el("input", { type: "text", spellcheck: "false" });
-      input.value = f.value || "";
-      inputs[f.name] = input;
-      box.append(el("label", {}, f.label), input);
-    }
-    const cancel = el("button", { class: "btn", type: "button" }, "Batal");
-    const okBtn = el("button", { class: "btn " + (danger ? "danger" : "primary"), type: "button" }, ok);
-    box.append(el("div", { class: "buttons" }, cancel, okBtn));
-    const back = el("div", { class: "backdrop" }, box);
-    const submit = async () => {
-      const values = Object.fromEntries(Object.entries(inputs).map(([k, i]) => [k, i.value.trim()]));
-      closeDialog();
-      const r = await onOk(values);
-      if (r && r.error) toast(r.error);
-    };
-    cancel.addEventListener("click", closeDialog);
-    okBtn.addEventListener("click", submit);
-    back.addEventListener("mousedown", (e) => { if (e.target === back) closeDialog(); });
-    box.addEventListener("keydown", (e) => {
-      e.stopPropagation();
-      if (e.key === "Enter") submit();
-      if (e.key === "Escape") closeDialog();
-    });
-    for (const t of ["keyup", "keypress", "mousedown"]) box.addEventListener(t, stop);
-    layer.append(back);
-    dialog = back;
-    (Object.values(inputs)[0] || okBtn).focus();
-  }
-
-  function closeDialog() {
-    if (dialog) dialog.remove();
-    dialog = null;
-  }
-
-  function editBookmark(node) {
-    openDialog({
-      title: "Edit bookmark",
-      fields: [{ name: "title", label: "Nama", value: node.t }, { name: "url", label: "Alamat (URL)", value: node.u }],
-      onOk: (v) => (v.url ? send({ type: "update", id: node.id, title: v.title, url: v.url }) : null),
-    });
-  }
-
-  function renameFolder(node) {
-    openDialog({
-      title: "Ganti nama folder",
-      message: "Tips: tambahkan emoji di depan nama, mis. 🔴 Server",
-      fields: [{ name: "title", label: "Nama folder", value: node.t }],
-      onOk: (v) => send({ type: "update", id: node.id, title: v.title }),
-    });
-  }
-
-  function newFolder(parentId) {
-    openDialog({
-      title: "Folder baru",
-      fields: [{ name: "title", label: "Nama folder", value: "" }],
-      onOk: (v) => (v.title ? send({ type: "create", parentId, title: v.title }) : null),
-    });
-  }
-
-  function deleteFolder(node, links) {
-    openDialog({
-      title: `Hapus folder "${node.t}"?`,
-      message: `Folder ini beserta ${links} bookmark di dalamnya akan dihapus. Bisa dibatalkan dengan Ctrl+Z di halaman Kelola bookmark.`,
-      ok: "Hapus",
-      danger: true,
-      onOk: () => send({ type: "remove", id: node.id, folder: true }),
-    });
-  }
-
-  // --- pencarian cepat --------------------------------------------------------------------
-  function score(b, terms) {
-    const t = b.t.toLowerCase();
-    const u = b.u.toLowerCase();
-    let s = 0;
-    for (const w of terms) {
-      if (t.startsWith(w)) s += 4;
-      else if (t.split(/[\s\-|_./]+/).some((x) => x.startsWith(w))) s += 3;
-      else if (t.includes(w)) s += 2;
-      else if (u.includes(w)) s += 1;
-      else return 0;
-    }
-    return s;
-  }
-
-  function highlight(text, terms) {
-    const span = el("b");
-    const lower = text.toLowerCase();
-    let i = 0;
-    while (i < text.length) {
-      let hit = null;
-      for (const w of terms) if (w && lower.startsWith(w, i) && (!hit || w.length > hit.length)) hit = w;
-      if (hit) { span.append(el("mark", {}, text.slice(i, i + hit.length))); i += hit.length; }
-      else { span.append(text[i]); i++; }
-    }
-    return span;
-  }
-
-  function openSearch() {
+  // --- jendela aman (pencarian + dialog) ---------------------------------------------------
+  // Dibuka di iframe milik ekstensi: ketikan di kotak cari / dialog tidak bisa dibaca halaman,
+  // dan iframe hanya mau tampil dengan token sekali pakai dari background.
+  async function openUI(mode, args = {}) {
     if (!host || !host.isConnected) return;
     closeMenus();
-    if (search) { search.input.focus(); return; }
-    const input = el("input", { type: "text", placeholder: "Cari bookmark… (nama atau alamat)", spellcheck: "false" });
-    const results = el("div", { class: "results" });
-    const box = el("div", { class: "box search" }, input, results,
-      el("div", { class: "hint" }, "↑↓ pilih · Enter buka · Ctrl+Enter tab baru · Shift+Enter jendela baru · Esc tutup"));
-    const back = el("div", { class: "backdrop" }, box);
-    let list = [];
-    let sel = 0;
-    const draw = () => {
-      const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
-      const all = data.all.filter((b) => !isJs(b.u));
-      list = terms.length
-        ? all.map((b) => [score(b, terms), b]).filter(([s]) => s > 0).sort((a, b) => b[0] - a[0]).map(([, b]) => b).slice(0, 10)
-        : all.slice(0, 10);
-      sel = Math.min(sel, Math.max(0, list.length - 1));
-      results.textContent = "";
-      if (!list.length) results.append(el("div", { class: "result" }, el("small", {}, "Tidak ditemukan")));
-      list.forEach((b, i) => {
-        const r = el("div", { class: "result" + (i === sel ? " sel" : "") }, icon(b),
-          el("div", { class: "txt" }, highlight(b.t || b.u, terms), el("small", {}, (b.p ? b.p + " · " : "") + b.u)));
-        r.addEventListener("mousemove", () => { if (sel !== i) { sel = i; draw(); } });
-        r.addEventListener("click", (e) => open(b.u, whereFrom(e)));
-        results.append(r);
-      });
-      const cur = results.children[sel];
-      if (cur) cur.scrollIntoView({ block: "nearest" });
-    };
-    input.addEventListener("input", () => { sel = 0; draw(); });
-    box.addEventListener("keydown", (e) => {
-      e.stopPropagation();
-      if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(sel + 1, list.length - 1); draw(); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(sel - 1, 0); draw(); }
-      else if (e.key === "Enter" && list[sel]) open(list[sel].u, e.shiftKey ? "window" : (e.ctrlKey || e.altKey || e.metaKey) ? "tab" : "same");
-      else if (e.key === "Escape") closeSearch();
-    });
-    for (const t of ["keyup", "keypress", "mousedown"]) box.addEventListener(t, stop);
-    back.addEventListener("mousedown", (e) => { if (e.target === back) closeSearch(); });
-    layer.append(back);
-    search = { back, input };
-    draw();
-    input.focus();
+    closeUI();
+    const token = await send({ type: "ui-open", mode, args });
+    if (!token) return;
+    const frame = el("iframe", { class: "ui", src: chrome.runtime.getURL("ui.html") + "#" + token, allowtransparency: "true" });
+    layer.append(frame);
+    frame.addEventListener("load", () => frame.focus());
+    ui = frame;
   }
 
-  function closeSearch() {
-    if (search) search.back.remove();
-    search = null;
+  function closeUI() {
+    if (ui) ui.remove();
+    ui = null;
   }
+
+  const openSearch = () => openUI("search");
+  const editBookmark = (node) => openUI("edit", { id: node.id });
+  const renameFolder = (node) => openUI("rename", { id: node.id });
+  const newFolder = (parentId) => openUI("newfolder", { parentId });
+  const deleteFolder = (node) => openUI("delete", { id: node.id });
 
   // --- drag & drop -------------------------------------------------------------------------
   function dragSource(b) {
@@ -593,6 +441,7 @@
       }
       const url = (e.dataTransfer.getData("text/uri-list") || "").split(/\r?\n/).find((l) => l && !l.startsWith("#"));
       if (!url) return;
+      if (!/^(https?|file):/i.test(url)) return toast("Hanya link http, https, atau file yang bisa dijadikan bookmark.");
       let title = (e.dataTransfer.getData("text/plain") || "").trim();
       if (!title || title === url) {
         const html = e.dataTransfer.getData("text/html");
@@ -792,10 +641,8 @@
   });
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "changed") refresh();
-    if (msg.type === "search") {
-      if (!host || !host.isConnected) return;
-      openSearch();
-    }
+    if (msg.type === "search") openSearch();
+    if (msg.type === "ui-close") { closeUI(); if (msg.toast) toast(msg.toast); }
   });
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
 

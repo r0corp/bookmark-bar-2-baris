@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Bookmark Bar 2 Baris",
   "short_name": "Bar 2 Baris",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Bookmark bar Chrome 2 baris: status online server, pencarian cepat, profil Kerja/Pribadi. Lokal, tanpa koneksi internet.",
   "minimum_chrome_version": "116",
   "permissions": ["bookmarks", "storage", "favicon", "alarms"],
@@ -16,7 +16,8 @@
     }
   ],
   "web_accessible_resources": [
-    { "resources": ["_favicon/*"], "matches": ["<all_urls>"] }
+    { "resources": ["_favicon/*"], "matches": ["<all_urls>"] },
+    { "resources": ["ui.html"], "matches": ["<all_urls>"], "use_dynamic_url": true }
   ],
   "action": { "default_title": "Tampilkan / sembunyikan bar (Alt+Shift+B)" },
   "commands": {
