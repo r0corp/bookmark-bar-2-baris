@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Pengaturan Bookmark Bar 2 Baris</title>
+<style>
+  :root { --bg: #f6f7fb; --card: #fff; --fg: #1f1f1f; --muted: #5f6368; --line: #dadce0; --accent: #1a73e8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #202124; --card: #2b2c2f; --fg: #e8eaed; --muted: #9aa0a6; --line: #4a4c50; --accent: #8ab4f8; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.lead { color: var(--muted); margin: 0 0 20px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 18px; margin-bottom: 16px; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row small { display: block; color: var(--muted); margin-top: 2px; }
+  select, input[type=number] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); font: inherit; }
+  input[type=number] { width: 80px; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 110px; padding: 8px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--card); color: var(--fg); font: 13px Consolas, monospace; margin: 4px 0 12px; }
+  .stack { padding: 12px 0; }
+  #saved { color: var(--accent); font-size: 13px; opacity: 0; transition: opacity .2s; }
+  ul { color: var(--muted); padding-left: 18px; margin: 8px 0 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bookmark Bar 2 Baris</h1>
+  <p class="lead">Perubahan langsung tersimpan dan berlaku di semua tab. <span id="saved">Tersimpan</span></p>
+
+  <section>
+    <div class="row">
+      <label for="rows">Jumlah baris<small>Bookmark yang tidak muat masuk ke tombol »</small></label>
+      <select id="rows"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+    </div>
+    <div class="row">
+      <label for="titles">Nama bookmark<small>Ikon saja membuat lebih banyak bookmark muat</small></label>
+      <select id="titles">
+        <option value="all">Tampilkan semua nama</option>
+        <option value="folders">Nama folder saja (bookmark ikon saja)</option>
+        <option value="none">Ikon saja</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="maxWidth">Lebar maksimum per bookmark (px)</label>
+      <input id="maxWidth" type="number" min="60" max="400" step="10">
+    </div>
+    <div class="row">
+      <label for="mode">Posisi bar<small>"Muncul saat mouse di atas" cocok untuk situs yang menunya tertutup bar</small></label>
+      <select id="mode">
+        <option value="push">Dorong halaman ke bawah</option>
+        <option value="overlay">Melayang di atas halaman</option>
+        <option value="reveal">Muncul saat mouse di tepi atas</option>
+      </select>
+    </div>
+    <div class="row">
+      <label for="other">Tampilkan folder "Bookmark lain"</label>
+      <input id="other" type="checkbox">
+    </div>
+  </section>
+
+  <section>
+    <div class="stack">
+      <label for="exclude">Jangan tampilkan bar di situs ini (satu per baris)</label>
+      <small style="color:var(--muted)">Contoh: klikbca.com, outlook.office.com. Subdomain ikut terkecuali.</small>
+      <textarea id="exclude" spellcheck="false"></textarea>
+    </div>
+  </section>
+
+  <section>
+    <div class="stack">
+      <strong>Tips</strong>
+      <ul>
+        <li>Sembunyikan bar asli Chrome dengan <b>Ctrl+Shift+B</b> supaya bookmark tidak tampil dobel.</li>
+        <li><b>Alt+Shift+B</b> atau klik ikon ekstensi: tampilkan / sembunyikan bar ini.</li>
+        <li>Klik tengah atau Ctrl+klik: buka di tab baru. Shift+klik: jendela baru. Klik tengah folder: buka semua.</li>
+        <li>Klik kanan di area kosong bar: kelola bookmark / pengaturan.</li>
+        <li>Bar tidak bisa muncul di halaman Chrome sendiri (chrome://, Web Store, tab baru).</li>
+        <li>Ekstensi ini tidak punya koneksi internet dan tidak update otomatis.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<script src="options.js"></script>
+</body>
+</html>
