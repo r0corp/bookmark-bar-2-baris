@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Bookmark Bar 2 Baris",
   "short_name": "Bar 2 Baris",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Bookmark bar Chrome dalam 2 baris (atau lebih). Lokal, tanpa koneksi internet, tanpa update otomatis.",
   "minimum_chrome_version": "114",
   "permissions": ["bookmarks", "storage", "favicon"],
