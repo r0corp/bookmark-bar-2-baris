@@ -9,31 +9,48 @@
     :root { --bg: #202124; --card: #2b2c2f; --fg: #e8eaed; --muted: #9aa0a6; --line: #4a4c50; --accent: #8ab4f8; }
   }
   body { margin: 0; background: var(--bg); color: var(--fg); font: 14px "Segoe UI", system-ui, sans-serif; }
-  main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  main { max-width: 680px; margin: 40px auto; padding: 0 16px; }
   h1 { font-size: 20px; margin: 0 0 4px; }
-  p.lead { color: var(--muted); margin: 0 0 20px; }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 18px; margin-bottom: 16px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 24px 0 8px; font-weight: 600; }
+  p.lead { color: var(--muted); margin: 0 0 8px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 6px 18px; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .row:last-child { border-bottom: 0; }
-  .row small { display: block; color: var(--muted); margin-top: 2px; }
-  select, input[type=number] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); font: inherit; }
+  .row label { flex: 1; }
+  small { display: block; color: var(--muted); margin-top: 2px; font-size: 12px; }
+  select, input[type=number], input[type=time] { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); font: inherit; max-width: 320px; }
   input[type=number] { width: 80px; }
-  textarea { width: 100%; box-sizing: border-box; min-height: 110px; padding: 8px; border: 1px solid var(--line); border-radius: 6px;
-    background: var(--card); color: var(--fg); font: 13px Consolas, monospace; margin: 4px 0 12px; }
-  .stack { padding: 12px 0; }
-  #saved { color: var(--accent); font-size: 13px; opacity: 0; transition: opacity .2s; }
+  input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
+  textarea { width: 100%; box-sizing: border-box; min-height: 96px; padding: 8px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--card); color: var(--fg); font: 13px Consolas, monospace; margin: 6px 0 12px; }
+  .stack { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .stack:last-child { border-bottom: 0; }
+  button { padding: 7px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); font: inherit; cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #saved { position: fixed; top: 16px; right: 16px; background: var(--accent); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; opacity: 0; transition: opacity .2s; }
+  #statusInfo { color: var(--muted); font-size: 12px; }
   ul { color: var(--muted); padding-left: 18px; margin: 8px 0 12px; }
+  li { margin: 3px 0; }
+  kbd { font: 12px Consolas, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--fg); }
+  .times { display: flex; gap: 8px; align-items: center; }
 </style>
 </head>
 <body>
+<div id="saved">Tersimpan</div>
 <main>
   <h1>Bookmark Bar 2 Baris</h1>
-  <p class="lead">Perubahan langsung tersimpan dan berlaku di semua tab. <span id="saved">Tersimpan</span></p>
+  <p class="lead">Perubahan langsung tersimpan dan berlaku di semua tab.</p>
 
+  <h2>Tampilan</h2>
   <section>
     <div class="row">
       <label for="rows">Jumlah baris<small>Bookmark yang tidak muat masuk ke tombol »</small></label>
       <select id="rows"><option>1</option><option>2</option><option>3</option><option>4</option></select>
+    </div>
+    <div class="row">
+      <label for="row2Folder">Isi baris 2<small>Pilih folder supaya baris 2 menjadi bar tersendiri, mis. folder "Kerja IT"</small></label>
+      <select id="row2Folder"></select>
     </div>
     <div class="row">
       <label for="titles">Nama bookmark<small>Ikon saja membuat lebih banyak bookmark muat</small></label>
@@ -48,7 +65,7 @@
       <input id="maxWidth" type="number" min="60" max="400" step="10">
     </div>
     <div class="row">
-      <label for="mode">Posisi bar<small>"Muncul saat mouse di atas" cocok untuk situs yang menunya tertutup bar</small></label>
+      <label for="mode">Posisi bar<small>"Muncul saat mouse di tepi atas" cocok untuk situs yang menunya tertutup bar</small></label>
       <select id="mode">
         <option value="push">Dorong halaman ke bawah</option>
         <option value="overlay">Melayang di atas halaman</option>
@@ -56,33 +73,83 @@
       </select>
     </div>
     <div class="row">
+      <label for="searchButton">Tombol cari 🔍 di awal bar<small>Pencarian tetap bisa dibuka dengan <kbd>Alt+Shift+F</kbd></small></label>
+      <input id="searchButton" type="checkbox">
+    </div>
+    <div class="row">
       <label for="other">Tampilkan folder "Bookmark lain"</label>
       <input id="other" type="checkbox">
     </div>
   </section>
 
+  <h2>Status server</h2>
+  <section>
+    <div class="row">
+      <label for="status">Titik hijau / merah di bookmark lokal<small>Dicek tiap menit: hijau = perangkat menjawab, merah = mati atau tidak menjawab</small></label>
+      <input id="status" type="checkbox">
+    </div>
+    <div class="stack">
+      <label for="statusHosts">Alamat yang dicek (satu per baris, <code>*</code> = apa saja)</label>
+      <small>Hanya bookmark dengan alamat yang cocok yang dicek. Tidak ada yang dikirim ke internet.</small>
+      <textarea id="statusHosts" spellcheck="false" style="min-height:124px"></textarea>
+      <div class="actions"><button id="checkNow" type="button">Cek sekarang</button><span id="statusInfo"></span></div>
+    </div>
+  </section>
+
+  <h2>Profil Kerja / Pribadi</h2>
+  <section>
+    <div class="row">
+      <label for="profileFolder">Folder untuk profil Pribadi<small>Profil Kerja memakai bookmark bar biasa. Tombol 💼/🏠 di bar atau <kbd>Alt+Shift+P</kbd> untuk ganti.</small></label>
+      <select id="profileFolder"></select>
+    </div>
+    <div class="row">
+      <label for="profileAuto">Ganti otomatis sesuai jam kerja<small>Senin–Jumat di jam kerja = Kerja, selain itu Pribadi. Ganti manual berlaku sampai jadwal berikutnya.</small></label>
+      <input id="profileAuto" type="checkbox">
+    </div>
+    <div class="row">
+      <label>Jam kerja</label>
+      <div class="times"><input id="workStart" type="time"> – <input id="workEnd" type="time"></div>
+    </div>
+  </section>
+
+  <h2>Situs dikecualikan</h2>
   <section>
     <div class="stack">
       <label for="exclude">Jangan tampilkan bar di situs ini (satu per baris)</label>
-      <small style="display:block;color:var(--muted);margin-top:2px">Contoh: klikbca.com, outlook.office.com. Subdomain ikut terkecuali.</small>
+      <small>Contoh: klikbca.com, outlook.office.com. Subdomain ikut terkecuali.</small>
       <textarea id="exclude" spellcheck="false"></textarea>
     </div>
   </section>
 
+  <h2>Backup</h2>
   <section>
     <div class="stack">
-      <strong>Tips</strong>
+      <small style="margin-bottom:10px">Simpan pengaturan (termasuk warna folder) ke file untuk dipindah ke laptop lain. Bookmark-nya sendiri ikut sinkron lewat akun Chrome atau Ekspor di Kelola bookmark.</small>
+      <div class="actions">
+        <button id="export" type="button" class="primary">Ekspor pengaturan</button>
+        <button id="import" type="button">Impor pengaturan…</button>
+        <button id="reset" type="button">Kembalikan bawaan</button>
+        <input id="importFile" type="file" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </section>
+
+  <h2>Tips</h2>
+  <section>
+    <div class="stack">
       <ul>
-        <li>Sembunyikan bar asli Chrome dengan <b>Ctrl+Shift+B</b> supaya bookmark tidak tampil dobel.</li>
-        <li><b>Alt+Shift+B</b> atau klik ikon ekstensi: tampilkan / sembunyikan bar ini.</li>
-        <li>Klik tengah atau Ctrl+klik: buka di tab baru. Shift+klik: jendela baru. Klik tengah folder: buka semua.</li>
-        <li>Klik kanan di area kosong bar: kelola bookmark / pengaturan.</li>
+        <li>Sembunyikan bar asli Chrome dengan <kbd>Ctrl+Shift+B</kbd> supaya bookmark tidak tampil dobel.</li>
+        <li><kbd>Alt+Shift+B</kbd> atau klik ikon ekstensi: tampilkan / sembunyikan bar. <kbd>Alt+Shift+F</kbd>: cari. <kbd>Alt+Shift+P</kbd>: ganti profil.</li>
+        <li>Klik tengah / <kbd>Ctrl</kbd>+klik: tab baru. <kbd>Shift</kbd>+klik: jendela baru. Klik tengah folder: buka semua.</li>
+        <li>Klik kanan bookmark: edit, hapus, buka Incognito. Klik kanan folder: ganti nama, warna folder.</li>
+        <li>Seret bookmark untuk menyusun ulang, atau ke tengah folder untuk memasukkannya. Link dari halaman juga bisa diseret ke bar.</li>
+        <li>Shortcut bisa diubah di <code>chrome://extensions/shortcuts</code>.</li>
         <li>Bar tidak bisa muncul di halaman Chrome sendiri (chrome://, Web Store, tab baru).</li>
-        <li>Ekstensi ini tidak punya koneksi internet dan tidak update otomatis.</li>
       </ul>
     </div>
   </section>
 </main>
+<script src="defaults.js"></script>
 <script src="options.js"></script>
 </body>
 </html>

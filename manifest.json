@@ -2,15 +2,15 @@
   "manifest_version": 3,
   "name": "Bookmark Bar 2 Baris",
   "short_name": "Bar 2 Baris",
-  "version": "1.0.1",
-  "description": "Bookmark bar Chrome dalam 2 baris (atau lebih). Lokal, tanpa koneksi internet, tanpa update otomatis.",
-  "minimum_chrome_version": "114",
-  "permissions": ["bookmarks", "storage", "favicon"],
+  "version": "1.1.0",
+  "description": "Bookmark bar Chrome 2 baris: status online server, pencarian cepat, profil Kerja/Pribadi. Lokal, tanpa koneksi internet.",
+  "minimum_chrome_version": "116",
+  "permissions": ["bookmarks", "storage", "favicon", "alarms"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*", "file:///*"],
-      "js": ["content.js"],
+      "js": ["defaults.js", "content.js"],
       "run_at": "document_end",
       "all_frames": false
     }
@@ -23,6 +23,14 @@
     "toggle-bar": {
       "suggested_key": { "default": "Alt+Shift+B" },
       "description": "Tampilkan / sembunyikan bar"
+    },
+    "search": {
+      "suggested_key": { "default": "Alt+Shift+F" },
+      "description": "Cari bookmark"
+    },
+    "profile": {
+      "suggested_key": { "default": "Alt+Shift+P" },
+      "description": "Ganti profil Kerja / Pribadi"
     }
   },
   "options_ui": { "page": "options.html", "open_in_tab": true },
